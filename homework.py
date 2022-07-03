@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 import time
+from datetime import datetime
 from http import HTTPStatus
 
 import requests
@@ -15,7 +16,6 @@ from exceptions import (EmptyResponseFromAPI, IncorrectResponseCode,
 load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-print(BASE_DIR)
 
 PRACTICUM_TOKEN = os.getenv('PRACTIC_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGA_TOKEN')
@@ -44,7 +44,7 @@ def send_message(bot, message):
         raise TelegramCustomError(
             f'Сбой при отправке сообщения в Телеграмм: {error}')
     else:
-        logging.info('Cообщения сообщение отправлено в Телеграмм')
+        logging.info('Cообщение отправлено в Телеграмм')
 
 
 def get_api_answer(current_timestamp):
@@ -69,7 +69,6 @@ def get_api_answer(current_timestamp):
             raise IncorrectResponseCode(
                 'Ошибка: {}, HTTPStatus: {}, текст: {}.'.format(
                     response.status_code, response.reason, response.text))
-
         return response.json()
 
     except ConnectionError:
@@ -93,7 +92,7 @@ def check_response(response):
         raise EmptyResponseFromAPI('Ответ API пришел пустой')
     homework = response.get('homeworks')
     if not isinstance(homework, list):
-        raise TypeError(
+        raise KeyError(
             "Ответ API: response['homeworks'] не список"
         )
     return homework
@@ -116,7 +115,7 @@ def parse_status(homework):
     if homework_status not in HOMEWORK_VERDICT:
         raise ValueError(f'Неизвестный статус работы: {homework_status}')
     return (
-        'Изменился статус проверки работы "{}". {}'.format(
+        'Изменился статус проверки работы "{}". Статус: {},'.format(
             homework_name, HOMEWORK_VERDICT[homework_status]
         )
     )
@@ -137,26 +136,32 @@ def main():
     current_report = dict()
     if not check_tokens():
         logging.critical('Проверьте переменные окружения')
-        sys.exit(1)
+        sys.exit('Проверьте переменные окружения')
     bot = Bot(token=TELEGRAM_TOKEN)
 
     while True:
         try:
             response = get_api_answer(current_timestamp)
-            current_timestamp = response.get('current_date', current_timestamp)
             homework = check_response(response)
             if homework:
                 last_homework = homework[0]
                 current_report['name'] = last_homework['homework_name']
-                message = parse_status(last_homework)
+                message_parse = parse_status(last_homework)
+                current_report['comment'] = last_homework['reviewer_comment']
+                message = ('{} Комментарий к работе: {}.'.format(
+                    message_parse, last_homework['reviewer_comment']))
                 current_report['message'] = message
             else:
-                message = 'Новых статусов нет'
-                current_report['message'] = message
-                logging.debug('Новых статусов нет')
+                prev_time = datetime.fromtimestamp(current_timestamp)
+                current_report['message'] = (
+                    'до настоящего момента домашних работ нет.')
+                message = 'За период c {} {}'.format(
+                    prev_time, current_report['message'])
             if current_report != prev_report:
                 send_message(bot, message)
                 prev_report = current_report.copy()
+            else:
+                logging.debug('Новых статусов нет')
 
         except NotForShipment as error:
             logging.error(f'{error}')
@@ -170,6 +175,7 @@ def main():
                 prev_report = current_report.copy()
 
         finally:
+            current_timestamp = response.get('current_date', current_timestamp)
             time.sleep(RETRY_TIME)
 
 
