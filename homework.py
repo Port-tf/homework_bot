@@ -114,11 +114,12 @@ def parse_status(homework):
         )
     if homework_status not in HOMEWORK_VERDICT:
         raise ValueError(f'Неизвестный статус работы: {homework_status}')
-    return (
-        'Изменился статус проверки работы "{}". Статус: {},'.format(
-            homework_name, HOMEWORK_VERDICT[homework_status]
-        )
-    )
+    return (f'Изменился статус проверки работы "{homework_name}". '
+            f'{HOMEWORK_VERDICT[homework_status]}'
+            )
+    # return ('Изменился статус проверки работы "{}". {},'.format(
+    #     homework_name, HOMEWORK_VERDICT[homework_status]))
+    # Закомментированую запись не пропускает pytest
 
 
 def check_tokens():
@@ -149,7 +150,7 @@ def main():
                 message_parse = parse_status(last_homework)
                 current_report['comment'] = last_homework['reviewer_comment']
                 message = ('{} Комментарий к работе: {}.'.format(
-                    message_parse, last_homework['reviewer_comment']))
+                    str(message_parse), last_homework['reviewer_comment']))
                 current_report['message'] = message
             else:
                 prev_time = datetime.fromtimestamp(current_timestamp)
