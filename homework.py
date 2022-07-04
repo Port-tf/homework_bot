@@ -153,7 +153,8 @@ def main():
                     str(message_parse), last_homework['reviewer_comment']))
                 current_report['message'] = message
             else:
-                prev_time = datetime.fromtimestamp(current_timestamp)
+                prev_time = time.strftime(
+                    "%a, %d %b %Y %H:%M:%S", time.localtime(current_timestamp))
                 current_report['message'] = (
                     'до настоящего момента домашних работ нет.')
                 message = 'За период c {} {}'.format(
@@ -185,12 +186,12 @@ if __name__ == '__main__':
         level=logging.INFO,
         handlers=[
             logging.FileHandler(
-                f'{BASE_DIR}\\my_homework.log', encoding='UTF-8', mode='w'),
+                f'{BASE_DIR}/my_homework.log', encoding='UTF-8', mode='w'),
             logging.StreamHandler(sys.stdout)
         ],
         format=(
-            '%(asctime)s, %(levelname)s, %(message)s : '
-            '%(filename)s(%(funcName)s):%(lineno)d'
+            '%(asctime)s, %(levelname)s: '
+            '%(filename)s(%(funcName)s):%(lineno)d, %(message)s'
         )
     )
     main()
