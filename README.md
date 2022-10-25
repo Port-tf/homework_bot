@@ -18,8 +18,8 @@ python -m venv env
 source env/bin/activate
 Установить зависимости из файла requirements.txt:
 
-python -m pip install --upgrade pip
-pip install -r requirements.txt
+'''python -m pip install --upgrade pip
+pip install -r requirements.txt'''
 Укажите собственные токены:
 
 Создать файл .env в директории проекта и пропишите в нем:
