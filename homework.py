@@ -49,6 +49,7 @@ def send_message(bot, message):
 def get_api_answer(current_timestamp):
     """
     Запрос к эндпоинту API-сервиса.
+    
     В качестве параметра функция получает временную метку.
     В случае успешного запроса должна вернуть ответ API,
     преобразовав его из формата JSON к типам данных Python.
@@ -67,18 +68,22 @@ def get_api_answer(current_timestamp):
         if response.status_code != HTTPStatus.OK:
             raise IncorrectResponseCode(
                 'Ошибка: {}, HTTPStatus: {}, текст: {}.'.format(
-                    response.status_code, response.reason, response.text))
+                    response.status_code, response.reason, response.text
+                )
+            )
         return response.json()
 
     except ConnectionError:
-        raise ConnectionError('Ошибка при запросе к основному API: '
-                              '{url}{headers}{params}'.format(**param_request)
-                              )
+        raise ConnectionError(
+          'Ошибка при запросе к основному API: '
+          '{url}{headers}{params}'.format(**param_request)
+        )
 
 
 def check_response(response):
     """
     Проверяет ответ API на корректность.
+    
     Если ответ API соответствует ожиданиям, то функция должна вернуть
     список домашних работ, доступный в ответе API по ключу 'homeworks'.
     """
@@ -100,6 +105,7 @@ def check_response(response):
 def parse_status(homework):
     """
     Извлекает из информации о конкретной домашней работе статус этой работы.
+    
     В качестве параметра функция получает только один элемент
     из списка домашних работ. В случае успеха, функция возвращает
     подготовленную для отправки в Telegram строку,
@@ -116,14 +122,12 @@ def parse_status(homework):
     return (f'Изменился статус проверки работы "{homework_name}". '
             f'{HOMEWORK_VERDICT[homework_status]}'
             )
-    # return ('Изменился статус проверки работы "{}". {},'.format(
-    #     homework_name, HOMEWORK_VERDICT[homework_status]))
-    # Закомментированую запись не пропускает pytest
 
 
 def check_tokens():
     """
     Проверяет доступность переменных окружения.
+    
     Они необходимы для работы программы.
     """
     return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
@@ -153,11 +157,14 @@ def main():
                 current_report['message'] = message
             else:
                 prev_time = time.strftime(
-                    "%a, %d %b %Y %H:%M:%S", time.localtime(current_timestamp))
+                    "%a, %d %b %Y %H:%M:%S", time.localtime(current_timestamp)
+                )
                 current_report['message'] = (
-                    'до настоящего момента домашних работ нет.')
+                    'до настоящего момента домашних работ нет.'
+                )
                 message = 'За период c {} {}'.format(
-                    prev_time, current_report['message'])
+                    prev_time, current_report['message']
+                )
             if current_report != prev_report:
                 send_message(bot, message)
                 prev_report = current_report.copy()
